@@ -38,3 +38,5 @@ addon.local.gradle.kts
 addon.late.local.gradle
 addon.late.local.gradle.kts
 layout.json
+
+OpenJDK8U-jdk_x64_linux_hotspot_8u504b01.tar.gz
