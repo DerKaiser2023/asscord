@@ -2,6 +2,7 @@ package cc.unilock.nilcord.util;
 
 import cc.unilock.nilcord.mixin.early.minecraft.AchievementAccessor;
 import cc.unilock.nilcord.mixin.early.minecraft.StatBaseAccessor;
+import cc.unilock.nilcord.util.LangFileLoader;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
@@ -52,13 +53,19 @@ public class TextUtils {
     }
 
     public static String parseAdvancement(String template, EntityPlayerMP player, Achievement achievement) {
+        String titleKey = achievement.statId;
+        String title = LangFileLoader.translate(titleKey);
+
+        String descriptionKey = ((AchievementAccessor) achievement).getAchievementDescription();
+        String description = LangFileLoader.translate(descriptionKey);
+
+        if (achievement.statId.equals("achievement.openInventory")) {
+            description = description.replace("%1$s", "E");
+        }
+
         return parsePlayer(template, player)
-                .replace("<achievement_title>", ((StatBaseAccessor) achievement).getStatName().getUnformattedTextForChat())
-                .replace("<achievement_description>",
-                        achievement.statId.equals("achievement.openInventory")
-                                ? StatCollector.translateToLocal(((AchievementAccessor) achievement).getAchievementDescription()).replace("%1$s", "E")
-                                : StatCollector.translateToLocal(((AchievementAccessor) achievement).getAchievementDescription())
-                );
+                .replace("<achievement_title>", title)
+                .replace("<achievement_description>", description);
     }
 
     public static String parseDeath(String template, EntityPlayerMP player, DamageSource source) {

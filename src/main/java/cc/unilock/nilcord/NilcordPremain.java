@@ -5,6 +5,7 @@ import cc.unilock.nilcord.compat.ModCompat;
 import cc.unilock.nilcord.compat.MuteBridge;
 import cc.unilock.nilcord.config.NilcordConfig;
 import cc.unilock.nilcord.discord.Discord;
+import cc.unilock.nilcord.util.LangFileLoader;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
@@ -36,6 +37,12 @@ public class NilcordPremain {
 
     @Mod.EventHandler
     public void onInitialization(FMLInitializationEvent event) {
+        String customLangFile = CONFIG.minecraft.custom_lang_file.value();
+        if (!customLangFile.isEmpty()) {
+            LangFileLoader.loadLangFile(customLangFile);
+            LOGGER.info("Loaded custom lang file: " + customLangFile);
+        }
+
         discord = new Discord();
         listener = new EventListener();
 

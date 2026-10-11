@@ -39,6 +39,10 @@ public class NilcordConfig extends ReflectiveConfig {
 
         @Comment("Whether to show messages from other Discord bots in-game")
         public final TrackedValue<Boolean> show_bot_messages = value(Boolean.FALSE);
+
+        @Comment("Custom lang file to use for achievement translations (place in config/nilcord/lang/)")
+        @Comment("Leave empty to use default Minecraft translations")
+        public final TrackedValue<String> custom_lang_file = value("");
     }
 
     @Comment("Settings pertaining to message formatting")
