@@ -38,32 +38,31 @@ public class LangFileLoader {
         }
 
         // Fallback to classpath resources
-        try (InputStream inputStream = LangFileLoader.class.getClassLoader().getResourceAsStream("lang/" + langFileName + ".lang")) {
-            if (inputStream == null) {
-                inputStream = LangFileLoader.class.getClassLoader().getResourceAsStream(langFileName + ".lang");
-            }
-            if (inputStream == null) {
-                inputStream = LangFileLoader.class.getClassLoader().getResourceAsStream(langFileName);
-            }
+        InputStream inputStream = LangFileLoader.class.getClassLoader().getResourceAsStream("lang/" + langFileName + ".lang");
+        if (inputStream == null) {
+            inputStream = LangFileLoader.class.getClassLoader().getResourceAsStream(langFileName + ".lang");
+        }
+        if (inputStream == null) {
+            inputStream = LangFileLoader.class.getClassLoader().getResourceAsStream(langFileName);
+        }
 
-            if (inputStream != null) {
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        line = line.trim();
-                        if (line.isEmpty() || line.startsWith("#")) continue;
+        if (inputStream != null) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    line = line.trim();
+                    if (line.isEmpty() || line.startsWith("#")) continue;
 
-                        int equalsIndex = line.indexOf('=');
-                        if (equalsIndex > 0) {
-                            String key = line.substring(0, equalsIndex).trim();
-                            String value = line.substring(equalsIndex + 1).trim();
-                            customTranslations.put(key, value);
-                        }
+                    int equalsIndex = line.indexOf('=');
+                    if (equalsIndex > 0) {
+                        String key = line.substring(0, equalsIndex).trim();
+                        String value = line.substring(equalsIndex + 1).trim();
+                        customTranslations.put(key, value);
                     }
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
