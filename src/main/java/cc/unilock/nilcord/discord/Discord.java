@@ -159,10 +159,11 @@ public class Discord extends ListenerAdapter {
     }
 
     public void sendWebhookMessageToDiscord(String message, EntityPlayerMP player) {
-        String avatar = TextUtils.parsePlayer(
-                CONFIG.formatting.discord.webhook.avatar_url.value(),
-                player
-        );
+        String avatarUrl = CONFIG.formatting.discord.webhook.tlauncher_avatar_url.value();
+        if (avatarUrl.isEmpty()) {
+            avatarUrl = CONFIG.formatting.discord.webhook.avatar_url.value();
+        }
+        String avatar = TextUtils.parsePlayer(avatarUrl, player);
 
         String username = TextUtils.parsePlayer(
                 CONFIG.formatting.discord.webhook.username.value(),
