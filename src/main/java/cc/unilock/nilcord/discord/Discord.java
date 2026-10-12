@@ -21,7 +21,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.text.Normalizer;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,6 +35,7 @@ public class Discord extends ListenerAdapter {
     private final JDA jda;
     private final IncomingWebhookClient webhook;
     private final String webhookId;
+    private final Map<String, String> perUserSkins;
 
     public Discord() {
         JDABuilder builder = JDABuilder.createDefault(CONFIG.discord.token.value())
@@ -47,6 +50,9 @@ public class Discord extends ListenerAdapter {
             throw new RuntimeException("Failed to log into Discord!", e);
         }
 
+        // Parse per-user skins config
+        this.perUserSkins = parsePerUserSkins(CONFIG.formatting.discord.webhook.per_user_skins.value());
+
         if (CONFIG.discord.webhook.enabled.value()) {
             try {
                 this.webhook = WebhookClient.createClient(jda, CONFIG.discord.webhook.url.value());
@@ -59,6 +65,21 @@ public class Discord extends ListenerAdapter {
             this.webhook = null;
             this.webhookId = null;
         }
+    }
+
+    private static Map<String, String> parsePerUserSkins(String config) {
+        Map<String, String> map = new HashMap<>();
+        if (config == null || config.trim().isEmpty()) {
+            return map;
+        }
+        String[] pairs = config.split(";");
+        for (String pair : pairs) {
+            String[] kv = pair.split("=", 2);
+            if (kv.length == 2) {
+                map.put(kv[0].trim(), kv[1].trim());
+            }
+        }
+        return map;
     }
 
     @Override
@@ -159,9 +180,13 @@ public class Discord extends ListenerAdapter {
     }
 
     public void sendWebhookMessageToDiscord(String message, EntityPlayerMP player) {
-        String avatarUrl = CONFIG.formatting.discord.webhook.tlauncher_avatar_url.value();
-        if (avatarUrl.isEmpty()) {
-            avatarUrl = CONFIG.formatting.discord.webhook.avatar_url.value();
+        String playerName = player.getGameProfile().getName();
+        String avatarUrl = perUserSkins.get(playerName);
+        if (avatarUrl == null || avatarUrl.isEmpty()) {
+            avatarUrl = CONFIG.formatting.discord.webhook.tlauncher_avatar_url.value();
+            if (avatarUrl.isEmpty()) {
+                avatarUrl = CONFIG.formatting.discord.webhook.avatar_url.value();
+            }
         }
         String avatar = TextUtils.parsePlayer(avatarUrl, player);
 
