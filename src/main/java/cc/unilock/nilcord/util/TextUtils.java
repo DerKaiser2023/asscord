@@ -8,6 +8,8 @@ import net.dv8tion.jda.api.entities.User;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.stats.Achievement;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.util.IChatComponent;
 import net.minecraft.util.StatCollector;
 
 import java.util.regex.Pattern;
@@ -64,6 +66,17 @@ public class TextUtils {
     public static String parseDeath(String template, EntityPlayerMP player, DamageSource source) {
         return parsePlayer(template, player)
                 .replace("<death_message>", source.func_151519_b(player).getUnformattedTextForChat());
+    }
+
+    /** Preserve the usual Nilcord template without ignoring edits to the final Forge component. */
+    public static String chatBody(ChatComponentTranslation component) {
+        Object[] args = component.getFormatArgs();
+        if ("chat.type.text".equals(component.getKey()) && args.length == 2 && component.getSiblings().isEmpty()) {
+            Object body = args[1];
+            return body == null ? "" : stripControlCodes(body instanceof IChatComponent
+                    ? ((IChatComponent) body).getUnformattedText() : body.toString());
+        }
+        return stripControlCodes(component.getUnformattedText());
     }
 
     public static String stripControlCodes(String text) {

@@ -1,8 +1,8 @@
 package cc.unilock.nilcord;
 
-import cc.unilock.nilcord.compat.FactionBridge;
+import cc.unilock.nilcord.compat.XenofactionsChatBridge;
 import cc.unilock.nilcord.compat.ModCompat;
-import cc.unilock.nilcord.compat.MuteBridge;
+import cc.unilock.nilcord.util.TextUtils;
 import cc.unilock.nilcord.config.NilcordConfig;
 import cc.unilock.nilcord.discord.Discord;
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -74,21 +74,13 @@ public class NilcordPremain {
         }
     }
     public static final class MFEvents {
-        @SubscribeEvent(priority = EventPriority.LOWEST, receiveCanceled = true)
+        @SubscribeEvent(priority = EventPriority.LOWEST, receiveCanceled = false)
         public void onServerChat(ServerChatEvent event) {
-            
-            if (event.player.worldObj.isRemote) return;
-            if (event.message == null || event.message.isEmpty()) return;
-
-            if (FactionBridge.isFactionChat(event.player)) {
-                return;
-            }
-
-            if (MuteBridge.isPlayerMuted(event.player.getUniqueID())) {
-                return;
-            }
-
-            listener.playerChatMessage(event.player, event.message);
+            if (event.isCanceled() || event.player.worldObj.isRemote || XenofactionsChatBridge.ownsChat()) return;
+            if (event.component == null) return;
+            String message = TextUtils.chatBody(event.component);
+            if (message.isEmpty()) return;
+            listener.playerChatMessage(event.player, message);
         }
         @SubscribeEvent
         public void onLivingDeath(LivingDeathEvent event) {
