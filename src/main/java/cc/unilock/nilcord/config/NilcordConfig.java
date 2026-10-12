@@ -91,10 +91,10 @@ public class NilcordConfig extends ReflectiveConfig {
                 @Comment("Additional placeholders: <uuid> <username>")
                 public final TrackedValue<String> avatar_url = value("https://visage.surgeplay.com/bust/128/<uuid>");
 
-                @Comment("Alternative avatar URL for TLauncher skins (fallback for players not in per_user_skins)")
+                @Comment("Skin model URL for TLauncher skins (fallback for players not in per_user_skins)")
                 @Comment("Additional placeholders: <uuid> <username>")
                 @Comment("Leave empty to use avatar_url for all players")
-                public final TrackedValue<String> tlauncher_avatar_url = value("");
+                public final TrackedValue<String> tlauncher_avatar_url = value("https://auth.tlauncher.org/skin/fileservice/skins/skin_<username>.png");
 
                 @Comment("Per-username custom skin URLs (format: username1=url1;username2=url2)")
                 @Comment("Example: Player1=https://example.com/skin1.png;Player2=https://example.com/skin2.png")

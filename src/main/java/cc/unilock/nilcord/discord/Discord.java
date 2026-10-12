@@ -76,7 +76,7 @@ public class Discord extends ListenerAdapter {
         for (String pair : pairs) {
             String[] kv = pair.split("=", 2);
             if (kv.length == 2) {
-                map.put(kv[0].trim(), kv[1].trim());
+                map.put(kv[0].trim().toLowerCase(Locale.ROOT), kv[1].trim());
             }
         }
         return map;
@@ -181,7 +181,7 @@ public class Discord extends ListenerAdapter {
 
     public void sendWebhookMessageToDiscord(String message, EntityPlayerMP player) {
         String playerName = player.getGameProfile().getName();
-        String avatarUrl = perUserSkins.get(playerName);
+        String avatarUrl = perUserSkins.get(playerName.toLowerCase(Locale.ROOT));
         if (avatarUrl == null || avatarUrl.isEmpty()) {
             avatarUrl = CONFIG.formatting.discord.webhook.tlauncher_avatar_url.value();
             if (avatarUrl.isEmpty()) {
