@@ -3,3 +3,6 @@
 plugins {
     id 'com.gtnewhorizons.gtnhconvention'
 }
+
+version = '2.5.0.1'
+ext.modVersion = '2.5.0.1'
