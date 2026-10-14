@@ -27,6 +27,10 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import static cc.unilock.nilcord.NilcordPremain.*;
 
 public class Discord extends ListenerAdapter {
@@ -94,7 +98,8 @@ public class Discord extends ListenerAdapter {
         if (CONFIG.formatting.minecraft.discord_message.value().isEmpty()) return;
 
         if (!event.isFromType(ChannelType.TEXT)) return;
-        if (!event.getChannel().asTextChannel().getId().equals(CONFIG.discord.channel_id.value())) return;
+        String channelId = event.getChannel().getId();
+        if (!isConfiguredChannel(channelId)) return;
 
         User author = event.getAuthor();
         if (!CONFIG.minecraft.show_bot_messages.value() && author.isBot()) return;
@@ -170,12 +175,39 @@ public class Discord extends ListenerAdapter {
         }
     }
 
+    private List<String> getChannelIds() {
+        List<String> ids = CONFIG.discord.channel_ids.value();
+        if (ids == null) return Collections.emptyList();
+        List<String> out = new ArrayList<>();
+        for (String id : ids) {
+            if (id != null && !id.trim().isEmpty() && !"EMPTY".equals(id.trim())) {
+                out.add(id.trim());
+            }
+        }
+        return out;
+    }
+
+    private boolean isConfiguredChannel(String id) {
+        if (id == null) return false;
+        for (String cid : getChannelIds()) {
+            if (cid.equals(id)) return true;
+        }
+        return false;
+    }
+
     public void sendBotMessageToDiscord(String message) {
-        TextChannel textChannel = this.jda.getTextChannelById(CONFIG.discord.channel_id.value());
-        if (textChannel != null) {
-            textChannel.sendMessage(message).queue();
-        } else {
-            LOGGER.error("Unable to find channel {}!", CONFIG.discord.channel_id.value());
+        List<String> ids = getChannelIds();
+        if (ids.isEmpty()) {
+            LOGGER.error("No Discord channel_ids configured!");
+            return;
+        }
+        for (String id : ids) {
+            TextChannel textChannel = this.jda.getTextChannelById(id);
+            if (textChannel != null) {
+                textChannel.sendMessage(message).queue();
+            } else {
+                LOGGER.error("Unable to find channel {}!", id);
+            }
         }
     }
 
@@ -210,15 +242,15 @@ public class Discord extends ListenerAdapter {
 
     private String parseMentions(String message) {
         String msg = message;
-
-        TextChannel textChannel = jda.getTextChannelById(CONFIG.discord.channel_id.value());
-        if (textChannel != null) {
-            for (Member member : jda.getTextChannelById(CONFIG.discord.channel_id.value()).getMembers()) {
-                message = Pattern.compile(Pattern.quote("@" + member.getUser().getName()), Pattern.CASE_INSENSITIVE).matcher(msg).replaceAll(member.getAsMention());
+        for (String id : getChannelIds()) {
+            TextChannel textChannel = jda.getTextChannelById(id);
+            if (textChannel != null) {
+                for (Member member : textChannel.getMembers()) {
+                    msg = Pattern.compile(Pattern.quote("@" + member.getUser().getName()), Pattern.CASE_INSENSITIVE).matcher(msg).replaceAll(member.getAsMention());
+                }
             }
         }
-
-        return message;
+        return msg;
     }
 
     public JDA getJda() {

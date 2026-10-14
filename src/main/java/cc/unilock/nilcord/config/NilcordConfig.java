@@ -4,6 +4,9 @@ import folk.sisby.kaleido.api.ReflectiveConfig;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.Comment;
 import folk.sisby.kaleido.lib.quiltconfig.api.values.TrackedValue;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class NilcordConfig extends ReflectiveConfig {
     @Comment("Settings pertaining to Discord itself")
     public final Discord discord = new Discord();
@@ -11,8 +14,8 @@ public class NilcordConfig extends ReflectiveConfig {
         @Comment("The Discord bot token to use")
         public final TrackedValue<String> token = value("EMPTY");
 
-        @Comment("The Discord channel ID for the bot to send messages to / receive messages from")
-        public final TrackedValue<String> channel_id = value("EMPTY");
+        @Comment("The Discord channel IDs for the bot to send messages to / receive messages from")
+        public final TrackedValue<List<String>> channel_ids = value(new ArrayList<>());
 
         @Comment("Settings pertaining to the Discord webhook")
         public final Webhook webhook = new Webhook();
