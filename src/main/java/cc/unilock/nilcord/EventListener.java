@@ -44,14 +44,24 @@ public class EventListener {
         this.crash = true;
         NilcordPremain.discord.sendMessageToDiscord(CONFIG.formatting.discord.server_crash_message.value());
     }
+public void playerChatMessage(EntityPlayerMP player, String message) {
+        String webhookTemplate = CONFIG.formatting.discord.webhook.chat_message.value();
+        String botTemplate = CONFIG.formatting.discord.chat_message.value();
+        
+        boolean webhookEnabled = CONFIG.discord.webhook.enabled.value();
+        String template = webhookEnabled ? webhookTemplate : botTemplate;
+        
+        if (template == null || template.isEmpty()) {
+            LOGGER.warn("Chat message template is empty (webhookEnabled={}, webhookTemplate='{}', botTemplate='{}')", 
+                webhookEnabled, webhookTemplate, botTemplate);
+            return;
+        }
 
-    public void playerChatMessage(EntityPlayerMP player, String message) {
-
-        if (CONFIG.discord.webhook.enabled.value() ? CONFIG.formatting.discord.webhook.chat_message.value().isEmpty() : CONFIG.formatting.discord.chat_message.value().isEmpty()) return;
-
-
-
-        NilcordPremain.discord.onPlayerChatMessage(player, message);
+        try {
+            NilcordPremain.discord.onPlayerChatMessage(player, message);
+        } catch (Exception e) {
+            LOGGER.error("Failed to process player chat message", e);
+        }
     }
 
     public void playerJoin(EntityPlayerMP player) {

@@ -1,11 +1,15 @@
 package cc.unilock.nilcord;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.*;
 import java.text.Normalizer;
 import java.util.*;
 import java.util.regex.Pattern;
 
 public class ChatFilter {
+    private static final Logger LOGGER = LogManager.getLogger("nilcord");
 
     private static final List<Pattern> BLOCKED_PATTERNS = new ArrayList<>();
     private static File filterFile;
@@ -111,10 +115,13 @@ public class ChatFilter {
 
     public static boolean isBlocked(String message) {
 
+        if (message == null) return false;
+        
         String clean = normalize(message);
 
         for (Pattern pattern : BLOCKED_PATTERNS) {
             if (pattern.matcher(clean).find()) {
+                LOGGER.debug("Chat message blocked by pattern '{}': {}", pattern.pattern(), message);
                 return true;
             }
         }

@@ -135,25 +135,30 @@ public class Discord extends ListenerAdapter {
     }
 
     public void onPlayerChatMessage(EntityPlayerMP player, String message) {
-        String msg = TextUtils.parseMessage(
-                CONFIG.discord.webhook.enabled.value() ? CONFIG.formatting.discord.webhook.chat_message.value() : CONFIG.formatting.discord.chat_message.value(),
-                player,
-                message
-        );
+        try {
+            String msg = TextUtils.parseMessage(
+                    CONFIG.discord.webhook.enabled.value() ? CONFIG.formatting.discord.webhook.chat_message.value() : CONFIG.formatting.discord.chat_message.value(),
+                    player,
+                    message
+            );
 
-        if (!CONFIG.minecraft.enable_everyone_and_here.value()) {
-            msg = parseEveryoneAndHere(msg);
-        }
-        if (CONFIG.minecraft.enable_mentions.value()) {
-            msg = parseMentions(msg);
-        }
+            if (!CONFIG.minecraft.enable_everyone_and_here.value()) {
+                msg = parseEveryoneAndHere(msg);
+            }
+            if (CONFIG.minecraft.enable_mentions.value()) {
+                msg = parseMentions(msg);
+            }
 
-        // 🚫 Block if matches regex
-        if (ChatFilter.isBlocked(message)) {
-            return;
-        }
+            // 🚫 Block if matches regex
+            if (ChatFilter.isBlocked(message)) {
+                LOGGER.debug("Chat message blocked by filter: {}", message);
+                return;
+            }
 
-        sendMessageToDiscord(msg, player);
+            sendMessageToDiscord(msg, player);
+        } catch (Exception e) {
+            LOGGER.error("Failed to send player chat message to Discord", e);
+        }
     }
 
 
@@ -171,35 +176,49 @@ public class Discord extends ListenerAdapter {
     }
 
     public void sendBotMessageToDiscord(String message) {
-        TextChannel textChannel = this.jda.getTextChannelById(CONFIG.discord.channel_id.value());
-        if (textChannel != null) {
-            textChannel.sendMessage(message).queue();
-        } else {
-            LOGGER.error("Unable to find channel {}!", CONFIG.discord.channel_id.value());
+        try {
+            TextChannel textChannel = this.jda.getTextChannelById(CONFIG.discord.channel_id.value());
+            if (textChannel != null) {
+                textChannel.sendMessage(message).queue(
+                        success -> {},
+                        error -> LOGGER.error("Failed to send bot message to Discord", error)
+                );
+            } else {
+                LOGGER.error("Unable to find channel {}!", CONFIG.discord.channel_id.value());
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to send bot message to Discord", e);
         }
     }
 
     public void sendWebhookMessageToDiscord(String message, EntityPlayerMP player) {
-        String playerName = player.getGameProfile().getName();
-        String avatarUrl = perUserSkins.get(playerName.toLowerCase(Locale.ROOT));
-        if (avatarUrl == null || avatarUrl.isEmpty()) {
-            avatarUrl = CONFIG.formatting.discord.webhook.tlauncher_avatar_url.value();
-            if (avatarUrl.isEmpty()) {
-                avatarUrl = CONFIG.formatting.discord.webhook.avatar_url.value();
+        try {
+            String playerName = player.getGameProfile().getName();
+            String avatarUrl = perUserSkins.get(playerName.toLowerCase(Locale.ROOT));
+            if (avatarUrl == null || avatarUrl.isEmpty()) {
+                avatarUrl = CONFIG.formatting.discord.webhook.tlauncher_avatar_url.value();
+                if (avatarUrl.isEmpty()) {
+                    avatarUrl = CONFIG.formatting.discord.webhook.avatar_url.value();
+                }
             }
-        }
-        String avatar = TextUtils.parsePlayer(avatarUrl, player);
+            String avatar = TextUtils.parsePlayer(avatarUrl, player);
 
-        String username = TextUtils.parsePlayer(
-                CONFIG.formatting.discord.webhook.username.value(),
-                player
-        );
+            String username = TextUtils.parsePlayer(
+                    CONFIG.formatting.discord.webhook.username.value(),
+                    player
+            );
 
-        try (MessageCreateData data = new MessageCreateBuilder().setContent(message).build()) {
-            webhook.sendMessage(data)
-                    .setAvatarUrl(avatar)
-                    .setUsername(username)
-                    .queue();
+            try (MessageCreateData data = new MessageCreateBuilder().setContent(message).build()) {
+                webhook.sendMessage(data)
+                        .setAvatarUrl(avatar)
+                        .setUsername(username)
+                        .queue(
+                                success -> {},
+                                error -> LOGGER.error("Failed to send webhook message to Discord", error)
+                        );
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to prepare webhook message", e);
         }
     }
 
@@ -213,7 +232,7 @@ public class Discord extends ListenerAdapter {
 
         TextChannel textChannel = jda.getTextChannelById(CONFIG.discord.channel_id.value());
         if (textChannel != null) {
-            for (Member member : jda.getTextChannelById(CONFIG.discord.channel_id.value()).getMembers()) {
+            for (Member member : textChannel.getMembers()) {
                 message = Pattern.compile(Pattern.quote("@" + member.getUser().getName()), Pattern.CASE_INSENSITIVE).matcher(msg).replaceAll(member.getAsMention());
             }
         }
