@@ -177,7 +177,7 @@ public class LangFileLoader {
         currentLangFile = null;
     }
 
-    public static void loadAllModLangFiles(java.util.List<String> modIds) {
+    public static void loadAllModLangFiles(String[] modIds) {
         for (String modId : modIds) {
             if (modId != null && !modId.isEmpty()) {
                 loadModLangFile(modId.trim());

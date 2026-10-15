@@ -46,7 +46,7 @@ public class NilcordConfig extends ReflectiveConfig {
 
         @Comment("List of mod IDs to load custom lang files for (place in config/nilcord/lang/<modid>.lang)")
         @Comment("Example: [\"opencomputers\", \"someothermod\"]")
-        public final TrackedValue<java.util.List<String>> mod_lang_files = value(new java.util.ArrayList<>());
+        public final TrackedValue<String[]> mod_lang_files = value(new String[0]);
     }
 
     @Comment("Settings pertaining to message formatting")
