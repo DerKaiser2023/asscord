@@ -43,6 +43,12 @@ public class NilcordPremain {
             LOGGER.info("Loaded custom lang file: " + customLangFile);
         }
 
+        java.util.List<String> modLangFiles = CONFIG.minecraft.mod_lang_files.value();
+        if (modLangFiles != null && !modLangFiles.isEmpty()) {
+            LangFileLoader.loadAllModLangFiles(modLangFiles);
+            LOGGER.info("Loaded mod lang files for: " + modLangFiles);
+        }
+
         discord = new Discord();
         listener = new EventListener();
 

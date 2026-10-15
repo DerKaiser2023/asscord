@@ -16,24 +16,25 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class LangFileLoader {
-    private static final Map<String, String> customTranslations = new HashMap<>();
+    private static final Map<String, Map<String, String>> modTranslations = new HashMap<>();
+    private static final Map<String, String> globalTranslations = new HashMap<>();
     private static String currentLangFile = null;
 
     public static void loadLangFile(String langFileName) {
-        customTranslations.clear();
+        globalTranslations.clear();
         currentLangFile = langFileName;
 
         // Try loading from config directory first
         Path configLangPath = Paths.get("config", "nilcord", "lang", langFileName + ".lang");
         if (Files.exists(configLangPath)) {
-            loadFromFile(configLangPath.toFile());
+            loadFromFile(configLangPath.toFile(), globalTranslations);
             return;
         }
 
         // Try loading from config directory without .lang extension
         configLangPath = Paths.get("config", "nilcord", "lang", langFileName);
         if (Files.exists(configLangPath)) {
-            loadFromFile(configLangPath.toFile());
+            loadFromFile(configLangPath.toFile(), globalTranslations);
             return;
         }
 
@@ -57,7 +58,7 @@ public class LangFileLoader {
                     if (equalsIndex > 0) {
                         String key = line.substring(0, equalsIndex).trim();
                         String value = line.substring(equalsIndex + 1).trim();
-                        customTranslations.put(key, value);
+                        globalTranslations.put(key, value);
                     }
                 }
             } catch (IOException e) {
@@ -66,7 +67,56 @@ public class LangFileLoader {
         }
     }
 
-    private static void loadFromFile(File file) {
+    public static void loadModLangFile(String modId) {
+        Map<String, String> translations = new HashMap<>();
+        
+        // Try loading from config directory first
+        Path configLangPath = Paths.get("config", "nilcord", "lang", modId + ".lang");
+        if (Files.exists(configLangPath)) {
+            loadFromFile(configLangPath.toFile(), translations);
+            modTranslations.put(modId, translations);
+            return;
+        }
+
+        // Try loading from config directory without .lang extension
+        configLangPath = Paths.get("config", "nilcord", "lang", modId);
+        if (Files.exists(configLangPath)) {
+            loadFromFile(configLangPath.toFile(), translations);
+            modTranslations.put(modId, translations);
+            return;
+        }
+
+        // Fallback to classpath resources
+        InputStream inputStream = LangFileLoader.class.getClassLoader().getResourceAsStream("lang/" + modId + ".lang");
+        if (inputStream == null) {
+            inputStream = LangFileLoader.class.getClassLoader().getResourceAsStream(modId + ".lang");
+        }
+        if (inputStream == null) {
+            inputStream = LangFileLoader.class.getClassLoader().getResourceAsStream(modId);
+        }
+
+        if (inputStream != null) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    line = line.trim();
+                    if (line.isEmpty() || line.startsWith("#")) continue;
+
+                    int equalsIndex = line.indexOf('=');
+                    if (equalsIndex > 0) {
+                        String key = line.substring(0, equalsIndex).trim();
+                        String value = line.substring(equalsIndex + 1).trim();
+                        translations.put(key, value);
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            modTranslations.put(modId, translations);
+        }
+    }
+
+    private static void loadFromFile(File file, Map<String, String> translations) {
         try (FileInputStream fis = new FileInputStream(file);
              BufferedReader reader = new BufferedReader(new InputStreamReader(fis, StandardCharsets.UTF_8))) {
             String line;
@@ -78,7 +128,7 @@ public class LangFileLoader {
                 if (equalsIndex > 0) {
                     String key = line.substring(0, equalsIndex).trim();
                     String value = line.substring(equalsIndex + 1).trim();
-                    customTranslations.put(key, value);
+                    translations.put(key, value);
                 }
             }
         } catch (IOException e) {
@@ -87,14 +137,34 @@ public class LangFileLoader {
     }
 
     public static String translate(String key) {
-        if (customTranslations.containsKey(key)) {
-            return customTranslations.get(key);
+        return translate(key, null);
+    }
+
+    public static String translate(String key, String modId) {
+        if (modId != null && modTranslations.containsKey(modId)) {
+            Map<String, String> translations = modTranslations.get(modId);
+            if (translations.containsKey(key)) {
+                return translations.get(key);
+            }
+        }
+        if (globalTranslations.containsKey(key)) {
+            return globalTranslations.get(key);
         }
         return StatCollector.translateToLocal(key);
     }
 
     public static boolean hasCustomTranslation(String key) {
-        return customTranslations.containsKey(key);
+        return hasCustomTranslation(key, null);
+    }
+
+    public static boolean hasCustomTranslation(String key, String modId) {
+        if (modId != null && modTranslations.containsKey(modId)) {
+            Map<String, String> translations = modTranslations.get(modId);
+            if (translations.containsKey(key)) {
+                return true;
+            }
+        }
+        return globalTranslations.containsKey(key);
     }
 
     public static String getCurrentLangFile() {
@@ -102,7 +172,16 @@ public class LangFileLoader {
     }
 
     public static void clear() {
-        customTranslations.clear();
+        modTranslations.clear();
+        globalTranslations.clear();
         currentLangFile = null;
+    }
+
+    public static void loadAllModLangFiles(java.util.List<String> modIds) {
+        for (String modId : modIds) {
+            if (modId != null && !modId.isEmpty()) {
+                loadModLangFile(modId.trim());
+            }
+        }
     }
 }

@@ -56,10 +56,11 @@ public class TextUtils {
 
     public static String parseAdvancement(String template, EntityPlayerMP player, Achievement achievement) {
         String titleKey = achievement.statId;
-        String title = LangFileLoader.translate(titleKey);
+        String modId = extractModIdFromStatId(titleKey);
+        String title = LangFileLoader.translate(titleKey, modId);
 
         String descriptionKey = ((AchievementAccessor) achievement).getAchievementDescription();
-        String description = LangFileLoader.translate(descriptionKey);
+        String description = LangFileLoader.translate(descriptionKey, modId);
 
         if (achievement.statId.equals("achievement.openInventory")) {
             description = description.replace("%1$s", "E");
@@ -68,6 +69,29 @@ public class TextUtils {
         return parsePlayer(template, player)
                 .replace("<achievement_title>", title)
                 .replace("<achievement_description>", description);
+    }
+
+    private static String extractModIdFromStatId(String statId) {
+        if (statId == null || statId.isEmpty()) {
+            return null;
+        }
+        
+        // Common patterns:
+        // "achievement.modid.name" -> extract "modid"
+        // "modid.achievement.name" -> extract "modid"
+        // "modid.name" -> extract "modid"
+        
+        String[] parts = statId.split("\\.");
+        if (parts.length >= 2) {
+            // If it starts with "achievement.", the mod ID is the second part
+            if ("achievement".equals(parts[0]) && parts.length >= 3) {
+                return parts[1];
+            }
+            // Otherwise, the first part might be the mod ID
+            return parts[0];
+        }
+        
+        return null;
     }
 
     public static String parseDeath(String template, EntityPlayerMP player, DamageSource source) {
