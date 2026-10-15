@@ -43,7 +43,9 @@ public class NilcordPremain {
             LOGGER.info("Loaded custom lang file: " + customLangFile);
         }
 
-        String[] modLangFiles = CONFIG.minecraft.mod_lang_files.value();
+        String[] modLangFiles = CONFIG.minecraft.mod_lang_files.value().isEmpty()
+                ? new String[0]
+                : CONFIG.minecraft.mod_lang_files.value().split(",");
         if (modLangFiles != null && modLangFiles.length > 0) {
             LangFileLoader.loadAllModLangFiles(modLangFiles);
             LOGGER.info("Loaded mod lang files for: " + modLangFiles);
