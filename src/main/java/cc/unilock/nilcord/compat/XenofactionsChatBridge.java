@@ -18,13 +18,17 @@ public final class XenofactionsChatBridge {
     private XenofactionsChatBridge() { }
 
     public static void init() {
-        ownsChat = Loader.isModLoaded("hfr");
-        if (!ownsChat) return;
+        if (!Loader.isModLoaded("hfr")) {
+            ownsChat = false;
+            return;
+        }
         try {
             Class.forName("com.hfr.api.PublicChat").getMethod("addListener", BiConsumer.class).invoke(null, LISTENER);
+            ownsChat = true;
             NilcordPremain.LOGGER.info("Xenofactions finalized public chat bridge enabled");
         } catch (ReflectiveOperationException | LinkageError failure) {
             // Older Xenofactions has no approved result. Never fall back to its canceled raw input.
+            ownsChat = false;
             NilcordPremain.LOGGER.error("Xenofactions public chat API unavailable; Minecraft chat relay is disabled. Update Xenofactions.", failure);
         }
     }
