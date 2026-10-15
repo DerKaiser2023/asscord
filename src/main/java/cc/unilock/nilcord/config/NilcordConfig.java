@@ -3,9 +3,7 @@ package cc.unilock.nilcord.config;
 import folk.sisby.kaleido.api.ReflectiveConfig;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.Comment;
 import folk.sisby.kaleido.lib.quiltconfig.api.values.TrackedValue;
-
-import java.util.ArrayList;
-import java.util.List;
+import folk.sisby.kaleido.lib.quiltconfig.api.values.ValueList;
 
 public class NilcordConfig extends ReflectiveConfig {
     @Comment("Settings pertaining to Discord itself")
@@ -15,7 +13,7 @@ public class NilcordConfig extends ReflectiveConfig {
         public final TrackedValue<String> token = value("EMPTY");
 
         @Comment("The Discord channel IDs for the bot to send messages to / receive messages from")
-        public final TrackedValue<List<String>> channel_ids = value(new ArrayList<>());
+        public final TrackedValue<ValueList<String>> channel_ids = list("EMPTY");
 
         @Comment("Settings pertaining to the Discord webhook")
         public final Webhook webhook = new Webhook();
